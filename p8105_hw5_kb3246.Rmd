@@ -13,9 +13,9 @@ library(patchwork)
 knitr::opts_chunk$set(
 	echo = TRUE,
 	warning = FALSE,
-	fig.width = 8, 
-  fig.height = 6,
-  out.width = "90%"
+	fig.width = 9, 
+  fig.height = 7,
+  out.width = "95%"
 )
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 options(
@@ -70,7 +70,7 @@ homicide_data =
 
 ## `prop.test` for Baltimore 
 
-```{r}
+```{r prop test baltimore}
 baltimore= 
   prop.test(
   homicide_data %>%  
@@ -86,7 +86,7 @@ baltimore=
 
 ## `prop.test` for each city
 
-```{r}
+```{r prop test all cities}
 homicide_data_pt = 
   homicide_data%>%
   mutate(
@@ -96,5 +96,24 @@ homicide_data_pt =
   select(-proportions) %>% 
   unnest(tidied) %>% 
   select(city_state, estimate, conf.low,conf.high)
+```
+
+## Plot for estimates and CIs for each city 
+
+```{r plot, dpi=500}
+homicide_plot = 
+  homicide_data_pt%>% 
+  ggplot(aes(x = fct_reorder(city_state, estimate), y = estimate))+ 
+  geom_point(alpha = 0.3)+
+  geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  labs(
+    title = "Homicide Data Estimates and CIs for Each City", 
+    x = "City", 
+    y = "Estimate"
+  )
+ggsave(path = "results", "homicide_plot.pdf")
+
+homicide_plot
 ```
 
