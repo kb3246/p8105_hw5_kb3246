@@ -66,6 +66,35 @@ homicide_data =
     total_homicides = closed_by_arrest+closed_without_arrest+open_no_arrest, 
     unsolved_homicides = closed_without_arrest+open_no_arrest
   )
-  
+```
+
+## `prop.test` for Baltimore 
+
+```{r}
+baltimore= 
+  prop.test(
+  homicide_data %>%  
+    filter(city_state == "Baltimore, MD") %>% 
+    pull(unsolved_homicides),
+  homicide_data %>%
+    filter(city_state == "Baltimore, MD") %>% 
+    pull(total_homicides)
+  ) %>% 
+  broom::tidy()%>%
+  select(estimate, conf.low,conf.high)
+```
+
+## `prop.test` for each city
+
+```{r}
+homicide_data_pt = 
+  homicide_data%>%
+  mutate(
+    proportions = map2(.x = unsolved_homicides, .y = total_homicides, ~prop.test(x = .x, n = .y)),
+    tidied = map(.x = proportions, ~broom::tidy(.x))
+    ) %>% 
+  select(-proportions) %>% 
+  unnest(tidied) %>% 
+  select(city_state, estimate, conf.low,conf.high)
 ```
 
