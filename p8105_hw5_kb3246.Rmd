@@ -42,46 +42,40 @@ homicide_raw =
 
 ## Summary of the dataset 
 
-`r skimr::skim(homicide_raw)`
 - The `homicide` dataset has `r nrow(homicide_raw)` rows and `r ncol(homicide_raw)` columns. 
 - It has the following variables: `r colnames(homicide_raw)`
-- It provides details on the date of the homicide, the victims' name, age, sex, city and state. 
-- It also had additional notes on the status of the case. 
 
 ## Creating `city_state` variable and summarizing
 
 ```{r city_state}
 homicide_data = 
   homicide_raw%>%
-  unite("city_state", city:state, remove = FALSE, sep=", ") %>%
-  group_by(city_state) %>%
-  count(disposition, name = "total_dispositions")%>%
-  pivot_wider(
-    names_from= "disposition",
-    values_from= "total_dispositions"
-    )%>%
-  janitor::clean_names()%>% 
-  replace(is.na(.), 0)%>%
+  janitor::clean_names()%>%
   mutate(
-    total_homicides = closed_by_arrest+closed_without_arrest+open_no_arrest, 
-    unsolved_homicides = closed_without_arrest+open_no_arrest
+    city_state = str_c(city,state, sep = ","),
+    status = 
+      case_when(
+        disposition == "Closed without arrest" ~ "unsolved", 
+        disposition == "Open/No arrest" ~ "unsolved", 
+        disposition == "Closed by arrest" ~ "solved"
+      ))%>%
+  group_by(city_state)%>%
+  summarise(
+    total= n(), 
+    unsolved = sum(status=="unsolved")
   )
 ```
 
-## `prop.test` for Baltimore 
+## `prop.test` for Baltimore and saving output as R object
 
 ```{r prop test baltimore}
-baltimore= 
-  prop.test(
-  homicide_data %>%  
-    filter(city_state == "Baltimore, MD") %>% 
-    pull(unsolved_homicides),
-  homicide_data %>%
-    filter(city_state == "Baltimore, MD") %>% 
-    pull(total_homicides)
-  ) %>% 
-  broom::tidy()%>%
-  select(estimate, conf.low,conf.high)
+prop.test(
+  homicide_data %>% filter(city_state == "Baltimore,MD") %>% 
+    pull(unsolved),
+  homicide_data %>% filter(city_state == "Baltimore,MD") %>% 
+    pull(total)) %>% 
+  broom::tidy()%>% 
+  saveRDS(., "./data/Baltimore_prop_test.rds")
 ```
 
 ## `prop.test` for each city
@@ -90,12 +84,14 @@ baltimore=
 homicide_data_pt = 
   homicide_data%>%
   mutate(
-    proportions = map2(.x = unsolved_homicides, .y = total_homicides, ~prop.test(x = .x, n = .y)),
-    tidied = map(.x = proportions, ~broom::tidy(.x))
+    prop_df =map2(.x = unsolved, .y = total, ~prop.test(x = .x, n = .y)),
+    tidied =map(.x = prop_df, ~broom::tidy(.x))
     ) %>% 
-  select(-proportions) %>% 
+  select(-prop_df) %>% 
   unnest(tidied) %>% 
   select(city_state, estimate, conf.low,conf.high)
+
+homicide_data_pt
 ```
 
 ## Plot for estimates and CIs for each city 
@@ -104,16 +100,17 @@ homicide_data_pt =
 homicide_plot = 
   homicide_data_pt%>% 
   ggplot(aes(x = fct_reorder(city_state, estimate), y = estimate))+ 
-  geom_point(alpha = 0.3)+
+  geom_point()+
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
-  labs(
-    title = "Homicide Data Estimates and CIs for Each City", 
-    x = "City", 
-    y = "Estimate"
-  )
-ggsave(path = "results", "homicide_plot.pdf")
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
 
 homicide_plot
+
+ggsave(path = "results", "homicide_plot.pdf")
+
 ```
+
+# Problem 3 
+
+
 
