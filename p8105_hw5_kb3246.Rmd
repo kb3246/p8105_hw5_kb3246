@@ -130,7 +130,25 @@ initial_sim = function(n = 30, sigma = 5, mu = 0) {
 }
 ```
 
+## Generating 5000 datasets 
 
+Now we want to generate 5000 datasets from the model. 
+
+```{r 5000 sims}
+
+simulations = vector("list", 1000)
+for(i in 1:1000) {
+  simulations[[i]]= initial_sim()
+}
+
+simulations = simulations %>%
+  bind_rows()%>%
+  head()
+```
+
+## Repeating the simulation for any `mu`
+
+Now we want to repeat the above for μ={1,2,3,4,5,6}
  
 
 
