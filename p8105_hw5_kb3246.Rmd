@@ -102,7 +102,10 @@ homicide_plot =
   ggplot(aes(x = fct_reorder(city_state, estimate), y = estimate))+ 
   geom_point()+
   geom_errorbar(aes(ymin = conf.low, ymax = conf.high)) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))+
+  labs(title = "Estimated proportions and 95% CIs of unsolved homicides, by city, in the US",
+       x = "City (City, State)",
+       y = "Estimated proportion and 95% CI")
 
 homicide_plot
 
@@ -111,6 +114,25 @@ ggsave(path = "results", "homicide_plot.pdf")
 ```
 
 # Problem 3 
+
+## Setting up my simulation 
+
+First I want to set up a simulation with the following design elements: n = 30, σ = 5 and μ = 0.
+
+```{r simulation setup}
+
+initial_sim = function(n = 30, sigma = 5, mu = 0) {
+  x = rnorm(n, mean = mu, sd = sigma)
+  t_test = t.test(x, conf.int = 0.95)%>%
+    broom::tidy()
+  
+    t_test
+}
+```
+
+
+ 
+
 
 
 
