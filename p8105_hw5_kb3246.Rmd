@@ -28,6 +28,8 @@ scale_fill_discrete = scale_fill_viridis_d
 
 # Problem 1
 
+## Importing data 
+
 The code chunk below imports the data in individual spreadsheets contained in `./data/zip_data/`. To do this, I create a dataframe that includes the list of all files in that directory and the complete path to each file. As a next step, I `map` over paths and import data using the `read_csv` function. Finally, I `unnest` the result of `map`.
 
 ```{r, message=FALSE, warning=FALSE}
@@ -40,6 +42,7 @@ full_df =
   unnest()
 ```
 
+## Tidying data 
 The result of the previous code chunk isn't tidy -- data are wide rather than long, and some important variables are included as parts of others. The code chunk below tides the data using string manipulations on the file, converting from wide to long, and selecting relevant variables. 
 
 ```{r}
@@ -57,6 +60,7 @@ tidy_df =
   select(group, subj = files, week, outcome)
 ```
 
+## Creating the plot 
 Finally, the code chunk below creates a plot showing individual data, faceted by group. 
 
 ```{r}
@@ -106,7 +110,7 @@ homicide_data =
   )
 ```
 
-## `prop.test` for Baltimore and saving output as R object
+## `prop.test` for Baltimore and saving output as an R object
 
 ```{r prop test baltimore}
 prop.test(
@@ -295,7 +299,8 @@ combined_plot =
 combined_plot
 ```
 
-- From the plot above, we can observe that the sample average of μ̂ across tests for which the null is rejected is approximately equal to the true value of μ, when μ lies between 0 and 4. It is evident that  μ̂ >μ in these cases. 
+- From the plot above, we can observe that the sample average of μ̂ across tests for which the null is rejected is approximately equal to the true value of μ, when μ lies between 0 and 4. 
+- It is evident that  μ̂ >μ in these cases. 
 - When μ => 4, then we see that μ̂ approximates μ. 
 - This is because as effect size increases, the power also increases. 
 
