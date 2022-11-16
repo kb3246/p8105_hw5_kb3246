@@ -180,8 +180,8 @@ Now we want to generate 5000 datasets from the model.
 ```{r 5000 sims}
 # Now we will repeat this process 5000 times 
 
-simulations = vector("list", 1000)
-for(i in 1:1000) {
+simulations = vector("list", 5000)
+for(i in 1:5000) {
   simulations[[i]]= initial_sim()
 }
 
@@ -195,8 +195,8 @@ Now we want to repeat the above for μ={1,2,3,4,5,6}
 
 ```{r any mu and power}
 sim_mu = function(set){
-  mu_output = vector("list", 1000)
-  for (i in 1:1000) {
+  mu_output = vector("list", 5000)
+  for (i in 1:5000) {
     mu_output[[i]] = initial_sim(mu = set)
   }
   power_output = 
@@ -225,7 +225,7 @@ simulation_any_mu =
 power_plot = 
   simulation_any_mu%>%
   group_by(mu_vals)%>%
-  summarise(power= sum(reject_status)/1000)%>%
+  summarise(power= sum(reject_status)/5000)%>%
   ggplot(aes(x = mu_vals, y= power))+ 
   geom_point(aes(color = mu_vals), size = 2) +
   geom_line(alpha = 0.3) +
