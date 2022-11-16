@@ -124,7 +124,8 @@ First I want to set up a simulation with the following design elements: n = 30, 
 initial_sim = function(n = 30, sigma = 5, mu = 0) {
   x = rnorm(n, mean = mu, sd = sigma)
   t_test = t.test(x, conf.int = 0.95)%>%
-    broom::tidy()
+    broom::tidy()%>%
+    select(estimate,p.value)
   
     t_test
 }
@@ -135,6 +136,7 @@ initial_sim = function(n = 30, sigma = 5, mu = 0) {
 Now we want to generate 5000 datasets from the model. 
 
 ```{r 5000 sims}
+# Now we will repeat this process 5000 times 
 
 simulations = vector("list", 1000)
 for(i in 1:1000) {
@@ -142,8 +144,7 @@ for(i in 1:1000) {
 }
 
 simulations = simulations %>%
-  bind_rows()%>%
-  head()
+  bind_rows()
 ```
 
 ## Repeating the simulation for any μ
@@ -158,31 +159,35 @@ sim_mu = function(set){
   }
   power_output = 
     mu_output%>%
-    bind_rows()%>%
-    janitor::clean_names() %>% 
-    select(estimate, p_value) %>% 
-    filter(p_value < 0.05) %>% 
-    count()
+    bind_rows()
+
+    #select(estimate, p_value) %>% 
+    #filter(p_value < 0.05) %>% 
+    #count()
   
   power_output
 }
 
 # For power of the test 
 
-test_power = 
+simulation_any_mu = 
   tibble(
     mu_vals = c(0,1,2,3,4,5,6), 
-    reject_count= map(mu_vals, sim_mu)
+    estimate_table= map(mu_vals, sim_mu)
   )%>% 
-  unnest(reject_count)%>%
-  mutate(power = n/1000)
+  unnest(estimate_table)%>%
+  mutate(
+    reject_status = ifelse(p.value < 0.05, TRUE, FALSE)
+    )
 ```
 
 ## Plot for power vs. true value of μ
 
 ```{r plotting power}
 power_plot = 
-  test_power%>%
+  simulation_any_mu%>%
+  group_by(mu_vals)%>%
+  summarise(power= sum(reject_status)/1000)%>%
   ggplot(aes(x = mu_vals, y= power))+ 
   geom_point(aes(color = mu_vals), size = 2) +
   geom_line(alpha = 0.3) +
@@ -194,6 +199,31 @@ power_plot
 
 ### Association between effect size and power
 
+From the plot, it is evident that power increases as μ increases. Therefore, we can conclude that as the effect size, which is the true value of μ increases, the power also increases. 
 
+## Plot for average estimate of μ vs. true value of μ
+
+```{r average vs true and overlay}
+
+all_estimates = 
+  simulation_any_mu%>%
+  group_by(mu_vals)%>% 
+  summarise(all_samp_mean = mean(estimate))
+
+reject_estimates =
+  simulation_any_mu%>%
+  group_by(mu_vals)%>% 
+  filter(reject_status==TRUE)%>%
+  summarise(reject_samp_mean = mean(estimate))
+
+combined_df= 
+  full_join(all_estimates, reject_estimates, by = "mu_vals")%>%
+  pivot_longer(
+    all_samp_mean:reject_samp_mean, 
+    names_to = "samples",
+    values_to = "avg_estimates"
+  )
+
+```
 
 
