@@ -146,11 +146,11 @@ simulations = simulations %>%
   head()
 ```
 
-## Repeating the simulation for any `mu`
+## Repeating the simulation for any μ
 
 Now we want to repeat the above for μ={1,2,3,4,5,6}
 
-```{r}
+```{r any mu and power}
 sim_mu = function(set){
   mu_output = vector("list", 1000)
   for (i in 1:1000) {
@@ -178,8 +178,21 @@ test_power =
   mutate(power = n/1000)
 ```
 
+## Plot for power vs. true value of μ
 
- 
+```{r plotting power}
+power_plot = 
+  test_power%>%
+  ggplot(aes(x = mu_vals, y= power))+ 
+  geom_point(aes(color = mu_vals), size = 2) +
+  geom_line(alpha = 0.3) +
+  labs(title = "Power vs. True Value of μ",
+       x = "True value of μ", 
+       y = "Power of the test")
+power_plot
+```
+
+### Association between effect size and power
 
 
 
